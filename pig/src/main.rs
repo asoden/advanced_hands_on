@@ -36,16 +36,57 @@ fn setup(
     mut commands: Commands,
 ) {
     commands.spawn(Camera2d);
-    let atlas = TextureAtlasLayout::from_grid(
 
-    );
+    let texture = asset_server.load("dice.png");
+    let atlas = TextureAtlasLayout::from_grid(UVec2::new(52, 52), 6, 1, None, None);
+    let atlas_handle = texture_atlases.add(atlas);
+    commands.insert_resource(GameAssets {
+        dice_image: texture,
+        dice_layout: atlas_handle,
+    });
+    commands.insert_resource(Scores { cpu: 0, player: 0 });
+    commands.insert_resource(Random(RandomNumberGenerator::new()));
+    commands.insert_resource(HandTimer(Timer::from_seconds(0.5, TimerMode::Repeating)));
 }
 
-fn display_score() {}
+fn display_score(scores: Res<Scores>, mut egui_context: EguiContexts) {
+    egui::Window::new("Total Scores").show(egui_context.ctx_mut(), |ui| {
+        ui.label(format!("Player: {}", scores.player));
+        ui.label(format!("CPU: {}", scores.cpu));
+    });
+}
 
-fn player(){}
+fn spawn_die(
+    hand_query: &Query<Entity, With<HandDie>>,
+    commands: &mut Commands,
+    assets: &GameAssets,
+    new_roll: usize,
+    color: Color,
+) {
+    let rolled_die = hand_query.iter().count() as f32 * 52.0;
+    commands.spawn((
+        Sprite {
+            image: assets.dice_image.clone(),
+            texture_atlas: Some(TextureAtlas {
+                layout: assets.dice_layout.clone(),
+                index: new_roll - 1,
+            }),
+            color,
+            ..default()
+        },
+        Transform::from_xyz(rolled_die - 400.0, 60.0, 1.0),
+    ));
+}
 
-fn cpu(){}
+fn clear_die(hand_query: &Query<Entity, With<HandDie>>, commands: &mut Commands) {
+    hand_query
+        .iter()
+        .for_each(|entity| commands.entity(entity).despawn());
+}
+
+fn player() {}
+
+fn cpu() {}
 
 fn main() {
     App::new()
