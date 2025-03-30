@@ -12,7 +12,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn movement(
     keyboard: Res<ButtonInput<KeyCode>>,
-    mut dragon_query: Query<&mut Transform, With<Dragon>>
+    mut dragon_query: Query<&mut Transform, With<Dragon>>,
 ) {
     let delta = if keyboard.pressed(KeyCode::ArrowLeft) {
         Vec2::new(-1.0, 0.0)
