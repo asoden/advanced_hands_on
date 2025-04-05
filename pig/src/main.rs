@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css::BLUE, prelude::*};
 use bevy_egui::{EguiContexts, EguiPlugin, egui};
 use my_library::RandomNumberGenerator;
 
@@ -57,36 +57,139 @@ fn display_score(scores: Res<Scores>, mut egui_context: EguiContexts) {
 }
 
 fn spawn_die(
-    hand_query: &Query<Entity, With<HandDie>>,
+    hand_query: &Query<(Entity, &Sprite), With<HandDie>>,
     commands: &mut Commands,
     assets: &GameAssets,
     new_roll: usize,
     color: Color,
 ) {
     let rolled_die = hand_query.iter().count() as f32 * 52.0;
-    commands.spawn((
-        Sprite {
-            image: assets.dice_image.clone(),
-            texture_atlas: Some(TextureAtlas {
-                layout: assets.dice_layout.clone(),
-                index: new_roll - 1,
-            }),
-            color,
-            ..default()
-        },
-        Transform::from_xyz(rolled_die - 400.0, 60.0, 1.0),
-    ));
+    commands
+        .spawn((
+            Sprite {
+                image: assets.dice_image.clone(),
+                texture_atlas: Some(TextureAtlas {
+                    layout: assets.dice_layout.clone(),
+                    index: new_roll - 1,
+                }),
+                color,
+                ..default()
+            },
+            Transform::from_xyz(rolled_die - 400.0, 60.0, 1.0),
+        ))
+        .insert(HandDie);
 }
 
-fn clear_die(hand_query: &Query<Entity, With<HandDie>>, commands: &mut Commands) {
+fn clear_die(hand_query: &Query<(Entity, &Sprite), With<HandDie>>, commands: &mut Commands) {
     hand_query
         .iter()
-        .for_each(|entity| commands.entity(entity).despawn());
+        .for_each(|(entity, _)| commands.entity(entity).despawn());
 }
 
-fn player() {}
+fn player(
+    hand_query: Query<(Entity, &Sprite), With<HandDie>>,
+    mut commands: Commands<'_, '_>,
+    mut rng: ResMut<Random>,
+    assets: Res<GameAssets>,
+    mut scores: ResMut<Scores>,
+    mut state: ResMut<NextState<GamePhase>>,
+    mut egui_context: EguiContexts,
+) {
+    egui::Window::new("Play Options").show(egui_context.ctx_mut(), |ui| {
+        let hand_score: usize = hand_query
+            .iter()
+            .map(|(_, sprite)| {
+                if let Some(texture_atlas) = &sprite.texture_atlas {
+                    texture_atlas.index + 1
+                } else {
+                    0
+                }
+            })
+            .sum();
 
-fn cpu() {}
+        ui.label(format!("Score for this hand: {hand_score}"));
+
+        if ui.button("Roll Dice").clicked() {
+            let new_roll = rng.0.range(1..7);
+            if new_roll == 1 {
+                // End turn!
+                clear_die(&hand_query, &mut commands);
+                state.set(GamePhase::Cpu);
+            } else {
+                spawn_die(
+                    &hand_query,
+                    &mut commands,
+                    &assets,
+                    new_roll as usize,
+                    Color::WHITE,
+                );
+            }
+        }
+        if ui.button("Pass - Keep Hand Score").clicked() {
+            let hand_total: usize = hand_query
+                .iter()
+                .map(|(_, sprite)| {
+                    if let Some(texture_atlas) = &sprite.texture_atlas {
+                        texture_atlas.index + 1
+                    } else {
+                        0
+                    }
+                })
+                .sum();
+            scores.player += hand_total;
+            clear_die(&hand_query, &mut commands);
+            state.set(GamePhase::Cpu);
+        }
+    });
+}
+
+#[allow(clippy::too_many_arguments)]
+fn cpu(
+    hand_query: Query<(Entity, &Sprite), With<HandDie>>,
+    mut state: ResMut<NextState<GamePhase>>,
+    mut scores: ResMut<Scores>,
+    mut rng: ResMut<Random>,
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    mut timer: ResMut<HandTimer>,
+    time: Res<Time>,
+) {
+    timer.0.tick(time.delta());
+    if timer.0.just_finished() {
+        let hand_total: usize = hand_query
+            .iter()
+            .map(|(_, sprite)| {
+                if let Some(texture_atlas) = &sprite.texture_atlas {
+                    texture_atlas.index + 1
+                } else {
+                    0
+                }
+            })
+            .sum();
+
+        if hand_total < 20 && scores.cpu + hand_total < 100 {
+            let new_roll = rng.0.range(1..7);
+            if new_roll == 1 {
+                clear_die(&hand_query, &mut commands);
+                state.set(GamePhase::Player);
+            } else {
+                spawn_die(
+                    &hand_query,
+                    &mut commands,
+                    &assets,
+                    new_roll as usize,
+                    bevy::prelude::Color::Srgba(BLUE),
+                );
+            }
+        } else {
+            scores.cpu += hand_total;
+            state.set(GamePhase::Player);
+            hand_query
+                .iter()
+                .for_each(|(entity, _)| commands.entity(entity).despawn());
+        }
+    }
+}
 
 fn main() {
     App::new()
