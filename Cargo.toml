@@ -8,4 +8,7 @@ members = [ "hello_bevy", "hello_world", "my_library", "pig"]
 
 [workspace.dependencies]
 bevy = "0.15"
-bevy_egui = "0.33" 
+bevy_egui = "0.33"
+rand = "0.9"
+rand_pcg = "0.9.0"
+rand_xorshift = "0.4.0"
