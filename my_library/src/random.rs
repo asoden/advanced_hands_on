@@ -1,5 +1,4 @@
-use rand::{Rng, SeedableRng, prelude::StdRng};
-use std::ops::Range;
+use rand::{distr::uniform::SampleRange, prelude::StdRng, Rng, SeedableRng};
 
 pub struct RandomNumberGenerator {
     rng: StdRng,
@@ -18,8 +17,17 @@ impl RandomNumberGenerator {
         }
     }
 
-    pub fn range(&mut self, range: Range<u32>) -> u32 {
+    pub fn range<T>(&mut self, range: impl SampleRange<T>) -> T 
+    where T: rand::distr::uniform::SampleUniform + PartialOrd
+    {
         self.rng.random_range(range)
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn next<T>(&mut self) -> T 
+    where rand::distr::StandardUniform: rand::prelude::Distribution<T>
+    {
+        self.rng.random()
     }
 }
 
@@ -55,5 +63,23 @@ mod test {
                 rng.1.range(u32::MIN..u32::MAX)
             )
         });
+    }
+
+    #[test]
+    fn test_floar() {
+        let mut rng = RandomNumberGenerator::new();
+        for _ in 0..1000 {
+            let n = rng.range(-5000.0f32..5000.0f32);
+            assert!(n.is_finite());
+            assert!(n > -5000.0);
+            assert!(n < 5000.0);
+        }
+    }
+
+    #[test]
+    fn test_next_types() {
+        let mut rng = RandomNumberGenerator::new();
+        let _ : i32 = rng.next();
+        let _ = rng.next::<f32>();
     }
 }

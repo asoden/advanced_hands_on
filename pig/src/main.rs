@@ -110,19 +110,13 @@ fn player(
         ui.label(format!("Score for this hand: {hand_score}"));
 
         if ui.button("Roll Dice").clicked() {
-            let new_roll = rng.0.range(1..7);
+            let new_roll = rng.0.range(1..=6);
             if new_roll == 1 {
                 // End turn!
                 clear_die(&hand_query, &mut commands);
                 state.set(GamePhase::Cpu);
             } else {
-                spawn_die(
-                    &hand_query,
-                    &mut commands,
-                    &assets,
-                    new_roll as usize,
-                    Color::WHITE,
-                );
+                spawn_die(&hand_query, &mut commands, &assets, new_roll, Color::WHITE);
             }
         }
         if ui.button("Pass - Keep Hand Score").clicked() {
@@ -177,7 +171,7 @@ fn cpu(
                     &hand_query,
                     &mut commands,
                     &assets,
-                    new_roll as usize,
+                    new_roll,
                     bevy::prelude::Color::Srgba(BLUE),
                 );
             }
