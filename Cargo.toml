@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = [ "hello_bevy", "hello_world", "my_library", "pig"]
+members = [ "hello_bevy", "hello_world", "my_library", "pig","flappy_dragon",]
 
 [workspace.dependencies]
 bevy = "0.15"
