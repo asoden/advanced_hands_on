@@ -28,6 +28,10 @@ pub mod rand {
     pub use rand::*;
 }
 
+pub mod anyhow {
+    pub use anyhow::*;
+}
+
 #[cfg(not(feature = "locking"))]
 mod random;
 #[cfg(not(feature = "locking"))]
@@ -39,3 +43,6 @@ pub use random_locking::*;
 
 mod bevy_framework;
 pub use bevy_framework::*;
+
+mod bevy_assets;
+pub use bevy_assets::*;
