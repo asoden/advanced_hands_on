@@ -1,12 +1,16 @@
 use bevy::{color::palettes::css::BLUE, prelude::*};
 use bevy_egui::{EguiContexts, EguiPlugin, egui};
-use my_library::{RandomNumberGenerator, RandomPlugin};
+use my_library::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default, States)]
 enum GamePhase {
+    MainMenu,
     #[default]
+    Start,
     Player,
     Cpu,
+    End,
+    GameOver,
 }
 
 #[derive(Resource)]
@@ -24,15 +28,21 @@ struct Scores {
 #[derive(Component)]
 struct HandDie;
 
+#[derive(Component)]
+pub struct GameElement;
+
 #[derive(Resource)]
 struct HandTimer(Timer);
+
+#[derive(Resource)]
+struct FinalScore(Scores);
 
 fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut commands: Commands,
 ) {
-    commands.spawn(Camera2d);
+    commands.spawn(Camera2d).insert(GameElement);
 
     let texture = asset_server.load("dice.png");
     let atlas = TextureAtlasLayout::from_grid(UVec2::new(52, 52), 6, 1, None, None);
@@ -60,20 +70,25 @@ fn spawn_die(
     color: Color,
 ) {
     let rolled_die = hand_query.iter().count() as f32 * 52.0;
-    commands
-        .spawn((
-            Sprite {
-                image: assets.dice_image.clone(),
-                texture_atlas: Some(TextureAtlas {
-                    layout: assets.dice_layout.clone(),
-                    index: new_roll - 1,
-                }),
-                color,
-                ..default()
-            },
-            Transform::from_xyz(rolled_die - 400.0, 60.0, 1.0),
-        ))
-        .insert(HandDie);
+    let mut sprite = Sprite::from_atlas_image(
+        assets.dice_image.clone(),
+        TextureAtlas {
+            layout: assets.dice_layout.clone(),
+            index: new_roll - 1,
+        },
+    );
+    sprite.color = color;
+
+    commands.spawn((
+        sprite,
+        Transform::from_xyz(rolled_die - 400.0, 60.0, 1.0),
+        HandDie,
+        GameElement,
+    ));
+}
+
+fn start_game(mut state: ResMut<NextState<GamePhase>>) {
+    state.set(GamePhase::Player);
 }
 
 fn clear_die(hand_query: &Query<(Entity, &Sprite), With<HandDie>>, commands: &mut Commands) {
@@ -181,15 +196,76 @@ fn cpu(
     }
 }
 
+fn check_game_over(mut state: ResMut<NextState<GamePhase>>, scores: Res<Scores>) {
+    if scores.cpu >= 100 || scores.player >= 100 {
+        state.set(GamePhase::End);
+    }
+}
+
+fn end_game(mut state: ResMut<NextState<GamePhase>>, scores: Res<Scores>, mut commands: Commands) {
+    commands.insert_resource(FinalScore(*scores));
+    state.set(GamePhase::GameOver);
+}
+
+fn display_final_score(scores: Res<FinalScore>, mut egui_context: EguiContexts) {
+    egui::Window::new("Total Scores").show(egui_context.ctx_mut(), |ui| {
+        ui.label(format!("Player: {}", scores.0.player));
+        ui.label(format!("CPU: {}", scores.0.cpu));
+        if scores.0.player < scores.0.cpu {
+            ui.label("CPU is the winner!");
+        } else {
+            ui.label("Player is the winner!");
+        }
+    });
+}
+
 fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugins(EguiPlugin)
-        .add_plugins(RandomPlugin)
-        .add_systems(Startup, setup)
-        .init_state::<GamePhase>()
-        .add_systems(Update, display_score)
-        .add_systems(Update, player.run_if(in_state(GamePhase::Player)))
-        .add_systems(Update, cpu.run_if(in_state(GamePhase::Cpu)))
-        .run();
+    let mut app = App::new();
+
+    add_phase!(app, GamePhase, GamePhase::Start,
+        start => [ setup ],
+        run => [ start_game ],
+        exit => [ ]
+    );
+
+    add_phase!(app, GamePhase, GamePhase::Player,
+        start => [ ],
+        run => [ player, check_game_over, display_score ],
+        exit => [ ]
+    );
+
+    add_phase!(app, GamePhase, GamePhase::Cpu,
+        start => [ ],
+        run => [ cpu, check_game_over, display_score ],
+        exit => [ ]
+    );
+
+    add_phase!(app, GamePhase, GamePhase::End,
+        start => [ ],
+        run => [ end_game ],
+        exit => [ cleanup::<GameElement> ]
+    );
+
+    add_phase!(app, GamePhase, GamePhase::GameOver,
+        start => [ ],
+        run => [ display_final_score ],
+        exit => [ ]
+    );
+
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Pig".to_string(),
+            resolution: bevy::window::WindowResolution::new(1024.0, 768.0),
+            ..default()
+        }),
+        ..default()
+    }))
+    .add_plugins(GameStatePlugin::new(
+        GamePhase::MainMenu,
+        GamePhase::Start,
+        GamePhase::GameOver,
+    ))
+    .add_plugins(EguiPlugin)
+    .add_plugins(RandomPlugin)
+    .run();
 }
