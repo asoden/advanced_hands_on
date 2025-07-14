@@ -8,11 +8,15 @@ pub(crate) struct MenuElement;
 pub(crate) fn setup<T>(
     state: Res<State<T>>,
     mut commands: Commands,
-    menu_assets: Res<MenuAssets>,
     menu_resource: Res<MenuResource<T>>,
+    asset_server: Res<AssetServer>,
 ) where
     T: States+FromWorld+FreelyMutableState,
 {
+    let menu_assets = MenuAssets {
+        main_menu: asset_server.load("main_menu.png"),
+        game_over: asset_server.load("game_over.png"),
+    };
     let current_state = state.get();
     let menu_graphic = match current_state {
         current_state if menu_resource.menu_state == *current_state => menu_assets.main_menu.clone(),

@@ -1,6 +1,6 @@
-use std::thread::current;
-
 use bevy::prelude::*;
+
+use crate::AssetStore;
 
 #[derive(Clone)]
 pub enum AssetType {
@@ -47,6 +47,30 @@ impl AssetManager {
 impl Plugin for AssetManager {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(self.clone());
-        //app.add_systems(Startup, setup);
+        app.add_systems(Startup, setup);
     }
+}
+
+fn setup(
+    asset_resource: Res<AssetManager>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
+    let mut assets = AssetStore {
+        asset_index: bevy::utils::HashMap::new(),
+    };
+    asset_resource.asset_list.iter().for_each(
+        |(tag, filename, asset_type)| {
+            match asset_type {
+                _ => {
+                    //Most asset types don't require a separate loader
+                    assets
+                        .asset_index
+                        .insert(tag.clone(), asset_server.load_untyped(filename));
+                }
+            }
+        }
+    );
+    commands.remove_resource::<AssetManager>();
+    commands.insert_resource(assets);
 }
