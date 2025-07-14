@@ -15,6 +15,7 @@ struct FlappyElement;
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default, States)]
 enum GamePhase {
     #[default]
+    Loading,
     MainMenu,
     Flapping,
     GameOver,
@@ -46,7 +47,9 @@ fn main() -> anyhow::Result<()> {
     .add_plugins(
         AssetManager::new()
             .add_image("dragon", "flappy_dragon.png")?
-            .add_image("wall", "wall.png")?,
+            .add_image("wall", "wall.png")?
+            .add_sound("flap", "dragonflap.ogg")?
+            .add_sound("crash", "crash.ogg")?,
     )
     .run();
 
@@ -59,7 +62,7 @@ fn setup(
     assets: Res<AssetStore>,
     loaded_assets: AssetResource,
 ) {
-    commands.spawn(Camera2d::default()).insert(FlappyElement);
+    commands.spawn(Camera2d).insert(FlappyElement);
     spawn_image!(
         assets,
         commands,
@@ -104,10 +107,17 @@ fn gravity(mut query: Query<(&mut Flappy, &mut Transform)>) {
     }
 }
 
-fn flap(keyboard: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Flappy>) {
+fn flap(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut query: Query<&mut Flappy>,
+    assets: Res<AssetStore>,
+    loaded_assets: Res<LoadedAssets>,
+    mut commands: Commands,
+) {
     if keyboard.pressed(KeyCode::Space) {
         if let Ok(mut flappy) = query.get_single_mut() {
             flappy.gravity = -5.0;
+            assets.play("flap", &mut commands, &loaded_assets);
         }
     }
 }
@@ -150,11 +160,15 @@ fn hit_wall(
     player: Query<&Transform, With<Flappy>>,
     walls: Query<&Transform, With<Obstacle>>,
     mut state: ResMut<NextState<GamePhase>>,
+    assets: Res<AssetStore>,
+    loaded_assets: Res<LoadedAssets>,
+    mut commands: Commands,
 ) {
     if let Ok(player) = player.get_single() {
         for wall in walls.iter() {
             let distance = player.translation.distance(wall.translation);
             if distance < 32.0 {
+                assets.play("crash", &mut commands, &loaded_assets);
                 state.set(GamePhase::GameOver);
             }
         }

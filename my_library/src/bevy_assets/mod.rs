@@ -1,9 +1,11 @@
 mod asset_manager;
 
 use bevy::sprite::Sprite;
-pub use asset_manager::AssetManager;
+pub use asset_manager::*;
 mod asset_store;
 pub use asset_store::*;
+mod loading_menu;
+pub(crate) use loading_menu::*;
 
 #[macro_export]
 macro_rules! spawn_image {

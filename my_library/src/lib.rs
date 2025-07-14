@@ -46,3 +46,7 @@ pub use bevy_framework::*;
 
 mod bevy_assets;
 pub use bevy_assets::*;
+
+pub mod egui {
+    pub use bevy_egui::*;
+}
