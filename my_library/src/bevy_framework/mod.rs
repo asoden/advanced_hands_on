@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy::state::state::FreelyMutableState;
 
+mod bevy_animation;
 mod game_menus;
+pub use bevy_animation::*;
 
 pub struct GameStatePlugin<T> {
     menu_state: T,
@@ -21,7 +23,9 @@ impl<T> GameStatePlugin<T> {
 }
 
 impl<T> Plugin for GameStatePlugin<T>
-where T: States + Copy + FromWorld + FreelyMutableState + Default {
+where
+    T: States + Copy + FromWorld + FreelyMutableState + Default,
+{
     fn build(&self, app: &mut App) {
         app.init_state::<T>();
         app.add_plugins(bevy_egui::EguiPlugin);
@@ -33,30 +37,38 @@ where T: States + Copy + FromWorld + FreelyMutableState + Default {
         app.insert_resource(start);
 
         app.add_systems(OnEnter(self.menu_state), game_menus::setup::<T>);
-        app.add_systems(Update, game_menus::run::<T>
-            .run_if(in_state(self.menu_state)));
-        app.add_systems(OnExit(self.menu_state),
-        cleanup::<game_menus::MenuElement>);
-        
+        app.add_systems(
+            Update,
+            game_menus::run::<T>.run_if(in_state(self.menu_state)),
+        );
+        app.add_systems(OnExit(self.menu_state), cleanup::<game_menus::MenuElement>);
+
         app.add_systems(OnEnter(self.game_end_state), game_menus::setup::<T>);
-        app.add_systems(Update, game_menus::run::<T>
-            .run_if(in_state(self.game_end_state)));
-        app.add_systems(OnExit(self.game_end_state),
-        cleanup::<game_menus::MenuElement>);
+        app.add_systems(
+            Update,
+            game_menus::run::<T>.run_if(in_state(self.game_end_state)),
+        );
+        app.add_systems(
+            OnExit(self.game_end_state),
+            cleanup::<game_menus::MenuElement>,
+        );
 
         app.add_systems(OnEnter(T::default()), crate::bevy_assets::setup);
-        app.add_systems(Update, crate::bevy_assets::run::<T>
-            .run_if(in_state(T::default())));
+        app.add_systems(
+            Update,
+            crate::bevy_assets::run::<T>.run_if(in_state(T::default())),
+        );
         app.add_systems(OnExit(T::default()), crate::bevy_assets::exit);
     }
 }
 
-pub fn cleanup<T>(
-    query: Query<Entity, With<T>>,
-    mut commands: Commands,
-)
-where T: Component {
-    query.iter().for_each(|entity| commands.entity(entity).despawn())
+pub fn cleanup<T>(query: Query<Entity, With<T>>, mut commands: Commands)
+where
+    T: Component,
+{
+    query
+        .iter()
+        .for_each(|entity| commands.entity(entity).despawn())
 }
 
 #[derive(Resource)]

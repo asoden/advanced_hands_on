@@ -1,7 +1,7 @@
-use super::{MenuResource};
+use super::MenuResource;
 use crate::{AssetResource, AssetStore};
-use bevy::{app::AppExit, prelude::*};
 use bevy::state::state::FreelyMutableState;
+use bevy::{app::AppExit, prelude::*};
 
 #[derive(Component)]
 pub(crate) struct MenuElement;
@@ -13,25 +13,28 @@ pub(crate) fn setup<T>(
     loaded_assets: AssetResource,
     assets: Res<AssetStore>,
 ) where
-    T: States+FromWorld+FreelyMutableState,
+    T: States + FromWorld + FreelyMutableState,
 {
     let current_state = state.get();
     let menu_graphic = match current_state {
-        current_state if menu_resource.menu_state == *current_state => assets.get_handle("main_menu", &loaded_assets).unwrap(),
-        current_state if menu_resource.game_end_state == *current_state => assets.get_handle("game_over", &loaded_assets).unwrap(),
+        current_state if menu_resource.menu_state == *current_state => {
+            assets.get_handle("main_menu", &loaded_assets).unwrap()
+        }
+        current_state if menu_resource.game_end_state == *current_state => {
+            assets.get_handle("game_over", &loaded_assets).unwrap()
+        }
         _ => panic!("Unknown menu state"),
     };
 
+    commands.spawn(Camera2d).insert(MenuElement);
     commands
-        .spawn(Camera2d)
-        .insert(MenuElement);
-    commands
-        .spawn((Sprite {
-            image: menu_graphic,
-            ..default()
-        },
-        Transform::from_xyz(0.0, 0.0, 1.0),
-    ))
+        .spawn((
+            Sprite {
+                image: menu_graphic,
+                ..default()
+            },
+            Transform::from_xyz(0.0, 0.0, 1.0),
+        ))
         .insert(MenuElement);
 }
 
@@ -42,7 +45,7 @@ pub(crate) fn run<T>(
     mut state: ResMut<NextState<T>>,
     menu_state: Res<MenuResource<T>>,
 ) where
-    T: States+FromWorld+FreelyMutableState,
+    T: States + FromWorld + FreelyMutableState,
 {
     let current_state = current_state.get().clone();
     if current_state == menu_state.menu_state {
