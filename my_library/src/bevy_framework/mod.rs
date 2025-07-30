@@ -4,6 +4,8 @@ use bevy::state::state::FreelyMutableState;
 mod bevy_animation;
 mod game_menus;
 pub use bevy_animation::*;
+mod bevy_physics;
+pub use bevy_physics::*;
 
 pub struct GameStatePlugin<T> {
     menu_state: T,
@@ -28,6 +30,9 @@ where
 {
     fn build(&self, app: &mut App) {
         app.init_state::<T>();
+
+        app.add_event::<PhysicsTick>();
+        app.add_event::<Impulse>();
         app.add_plugins(bevy_egui::EguiPlugin);
         let start = MenuResource {
             menu_state: self.menu_state,
