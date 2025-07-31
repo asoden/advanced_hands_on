@@ -1,4 +1,4 @@
-use bevy::{log, prelude::*, utils::HashMap};
+use bevy::{log, prelude::*, platform::collections::HashMap};
 
 pub enum AnimationOption {
     None,

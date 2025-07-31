@@ -84,8 +84,8 @@ impl AssetManager {
             filename,
             AssetType::SpriteSheet {
                 tile_size: Vec2::new(sprite_width, sprite_height),
-                sprites_x: sprites_x,
-                sprites_y: sprites_y,
+                sprites_x,
+                sprites_y,
             },
         ));
 
@@ -105,10 +105,10 @@ pub(crate) fn setup_asset_store(
     commands: &mut Commands,
     asset_server: &AssetServer,
 ) -> AssetStore {
-    let mut assets = AssetStore {
-        asset_index: bevy::utils::HashMap::new(),
+    let mut assets: AssetStore = AssetStore {
+        asset_index: bevy::platform::collections::HashMap::new(),
         atlases_to_build: Vec::new(),
-        atlases: bevy::utils::HashMap::new(),
+        atlases: bevy::platform::collections::HashMap::new(),
     };
     asset_resource
         .asset_list

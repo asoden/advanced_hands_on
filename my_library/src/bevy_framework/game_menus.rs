@@ -52,13 +52,13 @@ pub(crate) fn run<T>(
         if keyboard.just_pressed(KeyCode::KeyP) {
             state.set(menu_state.game_start_state.clone());
         } else if keyboard.just_pressed(KeyCode::KeyQ) {
-            exit.send(AppExit::Success);
+            exit.write(AppExit::Success);
         }
     } else if current_state == menu_state.game_end_state {
         if keyboard.just_pressed(KeyCode::KeyM) {
             state.set(menu_state.menu_state.clone());
         } else if keyboard.just_pressed(KeyCode::KeyQ) {
-            exit.send(AppExit::Success);
+            exit.write(AppExit::Success);
         }
     }
 }

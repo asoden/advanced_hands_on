@@ -7,8 +7,9 @@ edition = "2024"
 members = [ "hello_bevy", "hello_world", "my_library", "pig","flappy_dragon",]
 
 [workspace.dependencies]
-bevy = "0.15"
-bevy_egui = "0.33"
+anyhow = "1"
+bevy = "0.16"
+bevy_egui = "0.34"
 rand = "0.9"
 rand_pcg = "0.9.0"
 rand_xorshift = "0.4.0"

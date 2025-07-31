@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-anyhow = "1"
+anyhow = { workspace = true }
 rand = { workspace = true }
 rand_pcg = { workspace = true, optional = true }
 rand_xorshift = { workspace = true, optional = true }
 bevy = { workspace = true }
-bevy_egui = "0.32"
+bevy_egui = { workspace = true }
 
 [dev-dependencies]
 criterion = { version="0.5.1", features=["html_reports"] }

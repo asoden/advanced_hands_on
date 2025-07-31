@@ -18,7 +18,7 @@ pub fn physics_clock(
     clock.0 += ms_since_last_call;
     if clock.0 >= PHYSICS_TICK_TIME {
         clock.0 = 0;
-        on_tick.send(PhysicsTick);
+        on_tick.write(PhysicsTick);
     }
 }
 

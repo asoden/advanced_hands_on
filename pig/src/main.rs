@@ -1,5 +1,5 @@
 use bevy::{color::palettes::css::BLUE, prelude::*};
-use bevy_egui::{EguiContexts, EguiPlugin, egui};
+use bevy_egui::{EguiContexts, egui};
 use my_library::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default, States)]
@@ -219,7 +219,7 @@ fn display_final_score(scores: Res<FinalScore>, mut egui_context: EguiContexts) 
     });
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let mut app = App::new();
 
     add_phase!(app, GamePhase, GamePhase::Start,
@@ -265,7 +265,9 @@ fn main() {
         GamePhase::Start,
         GamePhase::GameOver,
     ))
-    .add_plugins(EguiPlugin)
+    .add_plugins(AssetManager::new().add_image("dice", "dice.png")?)
     .add_plugins(RandomPlugin)
     .run();
+
+    Ok(())
 }

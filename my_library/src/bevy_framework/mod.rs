@@ -33,7 +33,9 @@ where
 
         app.add_event::<PhysicsTick>();
         app.add_event::<Impulse>();
-        app.add_plugins(bevy_egui::EguiPlugin);
+        app.add_plugins(bevy_egui::EguiPlugin{
+            enable_multipass_for_primary_context: false
+        });
         let start = MenuResource {
             menu_state: self.menu_state,
             game_start_state: self.game_start_state,

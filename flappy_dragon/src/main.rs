@@ -2,9 +2,7 @@ use bevy::prelude::*;
 use my_library::*;
 
 #[derive(Component)]
-struct Flappy {
-  gravity: f32,
-}
+struct Flappy;
 
 #[derive(Component)]
 struct Obstacle;
@@ -93,9 +91,9 @@ fn setup(
   assets: Res<AssetStore>,
   loaded_assets: Res<LoadedAssets>,
 ) {
-  commands.spawn(Camera2d::default()).insert(FlappyElement);
+  commands.spawn(Camera2d).insert(FlappyElement);
   spawn_animated_sprite!(assets, commands, "flappy", -490.0, 0.0, 10.0,
-    "Straight and Level", Flappy { gravity: 0.0 }, FlappyElement, 
+    "Straight and Level", Flappy, FlappyElement, 
     Velocity::default(), ApplyGravity);
   build_wall(&mut commands, &assets, rng.range(-5..5), &loaded_assets);
 
@@ -130,9 +128,8 @@ fn flap(
 ) 
 {
   if keyboard.pressed(KeyCode::Space) {
-    if let Ok((flappy, mut animation)) = query.get_single_mut() {
-      //flappy.gravity = -5.0; // <-- Delete
-      impulse.send(Impulse{
+    if let Ok((flappy, mut animation)) = query.single_mut() {
+      impulse.write(Impulse{
         target: flappy, amount: Vec3::Y, 
         absolute: false
       });
@@ -145,7 +142,7 @@ fn clamp(
   mut query: Query<&mut Transform, With<Flappy>>,
   mut state: ResMut<NextState<GamePhase>>,
 ) {
-  if let Ok(mut transform) = query.get_single_mut() {
+  if let Ok(mut transform) = query.single_mut() {
     if transform.translation.y > 384.0 {
       transform.translation.y = 384.0;
     } else if transform.translation.y < -384.0 {
@@ -186,7 +183,7 @@ fn hit_wall(
   loaded_assets: Res<LoadedAssets>,
   mut commands: Commands,
 ) {
-  if let Ok(player) = player.get_single() {
+  if let Ok(player) = player.single() {
     for wall in walls.iter() {
       let distance = player.translation.distance(wall.translation);
       if distance < 32.0 {

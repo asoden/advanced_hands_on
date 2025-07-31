@@ -1,7 +1,6 @@
 mod asset_manager;
 
 pub use asset_manager::*;
-use bevy::sprite::Sprite;
 mod asset_store;
 pub use asset_store::*;
 mod loading_menu;
