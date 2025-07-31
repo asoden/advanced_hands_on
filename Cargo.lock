@@ -1586,6 +1586,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bouncy"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "my_library",
+]
+
+[[package]]
 name = "built"
 version = "0.7.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
