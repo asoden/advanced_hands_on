@@ -1,7 +1,7 @@
 use bevy::{
     asset::{Asset, LoadedUntypedAsset},
+    platform::collections::HashMap,
     prelude::*,
-    platform::collections::HashMap
 };
 
 pub type LoadedAssets = Assets<LoadedUntypedAsset>;

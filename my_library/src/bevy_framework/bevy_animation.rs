@@ -1,4 +1,4 @@
-use bevy::{log, prelude::*, platform::collections::HashMap};
+use bevy::{log, platform::collections::HashMap, prelude::*};
 
 pub enum AnimationOption {
     None,
@@ -141,31 +141,36 @@ pub struct ContinualParallax {
     image_width: f32,
     move_every_ms: u128,
     scroll_speed: Vec2,
-    timer: u128
+    timer: u128,
 }
 
 impl ContinualParallax {
     pub fn new(image_width: f32, move_every_ms: u128, scroll_speed: Vec2) -> Self {
         Self {
-            image_width, move_every_ms, scroll_speed, timer: 0
+            image_width,
+            move_every_ms,
+            scroll_speed,
+            timer: 0,
         }
     }
 }
 
 pub fn continual_parallax(
     mut animated: Query<(&mut ContinualParallax, &mut Transform)>,
-    time: Res<Time>
+    time: Res<Time>,
 ) {
     let ms_since_last_call = time.delta().as_millis();
-    animated.iter_mut().for_each(|(mut parallax, mut transform)| {
-        parallax.timer += ms_since_last_call;
-        if parallax.timer >= parallax.move_every_ms {
-            parallax.timer = 0;
-            transform.translation.x -= parallax.scroll_speed.x;
-            transform.translation.y -= parallax.scroll_speed.y;
-            if transform.translation.x <= (0.0 - parallax.image_width) {
-                transform.translation.x = parallax.image_width;
+    animated
+        .iter_mut()
+        .for_each(|(mut parallax, mut transform)| {
+            parallax.timer += ms_since_last_call;
+            if parallax.timer >= parallax.move_every_ms {
+                parallax.timer = 0;
+                transform.translation.x -= parallax.scroll_speed.x;
+                transform.translation.y -= parallax.scroll_speed.y;
+                if transform.translation.x <= (0.0 - parallax.image_width) {
+                    transform.translation.x = parallax.image_width;
+                }
             }
-        }
-    });
+        });
 }

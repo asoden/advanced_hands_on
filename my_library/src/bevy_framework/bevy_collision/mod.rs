@@ -2,28 +2,28 @@ mod aabb;
 mod rect2d;
 mod static_quadtree;
 pub use aabb::AxisAlignedBoundingBox;
+use bevy::{platform::collections::HashMap, prelude::*};
 pub use rect2d::Rect2D;
 pub use static_quadtree::*;
-use bevy::{prelude::*, platform::collections::HashMap};
 use std::marker::PhantomData;
 
 #[derive(Event)]
-pub struct OnCollision<A,B>
+pub struct OnCollision<A, B>
 where
     A: Component,
     B: Component,
 {
     pub entity_a: Entity,
     pub entity_b: Entity,
-    marker: PhantomData<(A, B)>
+    marker: PhantomData<(A, B)>,
 }
 
-pub fn check_collisions<A, B>( 
+pub fn check_collisions<A, B>(
     quad_tree: Res<StaticQuadTree>,
     query_a: Query<(Entity, &Transform, &AxisAlignedBoundingBox), With<A>>,
     query_b: Query<(Entity, &Transform, &AxisAlignedBoundingBox), With<B>>,
     mut sender: EventWriter<OnCollision<A, B>>,
-) where 
+) where
     A: Component,
     B: Component,
 {
@@ -43,8 +43,12 @@ pub fn check_collisions<A, B>(
         for node in quad_tree.intersecting_nodes(&bbox_a) {
             if let Some(contents) = spatial_index.get(&node) {
                 for (entity_b, bbox_b) in contents {
-                    if entity_a != * entity_b && bbox_a.intersect(bbox_b) {
-                        sender.write(OnCollision { entity_a, entity_b: *entity_b, marker: PhantomData });
+                    if entity_a != *entity_b && bbox_a.intersect(bbox_b) {
+                        sender.write(OnCollision {
+                            entity_a,
+                            entity_b: *entity_b,
+                            marker: PhantomData,
+                        });
                     }
                 }
             }

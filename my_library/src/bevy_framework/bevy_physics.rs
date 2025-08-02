@@ -12,7 +12,7 @@ pub struct PhysicsTick;
 pub fn physics_clock(
     mut clock: Local<PhysicsTimer>,
     time: Res<Time>,
-    mut on_tick: EventWriter<PhysicsTick>
+    mut on_tick: EventWriter<PhysicsTick>,
 ) {
     let ms_since_last_call = time.delta().as_millis();
     clock.0 += ms_since_last_call;
@@ -33,7 +33,7 @@ impl Default for Velocity {
 
 impl Velocity {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
-        Self( Vec3 { x, y, z })
+        Self(Vec3 { x, y, z })
     }
 }
 
@@ -44,10 +44,7 @@ pub struct Impulse {
     pub absolute: bool,
 }
 
-pub fn sum_impulses(
-    mut impulses: EventReader<Impulse>,
-    mut velocities: Query<&mut Velocity>,
-) {
+pub fn sum_impulses(mut impulses: EventReader<Impulse>, mut velocities: Query<&mut Velocity>) {
     for impulse in impulses.read() {
         if let Ok(mut velocity) = velocities.get_mut(impulse.target) {
             if impulse.absolute {
